@@ -1,0 +1,45 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      OZON_TASK_STORAGE_TYPE: postgres
+      OZON_TASK_POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/ozon_task?sslmode=disable
+    volumes:
+      - ./config/config.yaml:/app/config/config.yaml:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  migrate:
+    build: .
+    entrypoint: ["/app/goose"]
+    command:
+      - "-dir"
+      - "/app/migrations"
+      - "postgres"
+      - "postgres://postgres:postgres@postgres:5432/ozon_task?sslmode=disable"
+      - "up"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ozon_task
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ozon_task"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,89 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+type Query {
+  posts(first: Int! = 20, after: Cursor): PostConnection!
+  post(id: ID!): Post
+}
+
+type Mutation {
+  createPost(input: CreatePostInput!): Post!
+  updatePostCommentsEnabled(input: UpdatePostCommentsEnabledInput!): Post!
+  createComment(input: CreateCommentInput!): Comment!
+}
+
+type Subscription {
+  commentAdded(postId: ID!): Comment!
+}
+
+type Post {
+  id: ID!
+  authorName: String!
+  title: String!
+  body: String!
+  commentsEnabled: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  comments(first: Int! = 20, after: Cursor): CommentConnection!
+}
+
+type Comment {
+  id: ID!
+  postId: ID!
+  parentId: ID
+  authorName: String!
+  body: String!
+  createdAt: DateTime!
+  replies(first: Int! = 20, after: Cursor): CommentConnection!
+}
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PostEdge {
+  node: Post!
+  cursor: Cursor!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CommentEdge {
+  node: Comment!
+  cursor: Cursor!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: Cursor
+}
+
+input CreatePostInput {
+  authorName: String!
+  title: String!
+  body: String!
+  commentsEnabled: Boolean! = true
+}
+
+input UpdatePostCommentsEnabledInput {
+  postId: ID!
+  authorName: String!
+  commentsEnabled: Boolean!
+}
+
+input CreateCommentInput {
+  postId: ID!
+  parentId: ID
+  authorName: String!
+  body: String!
+}
+
+scalar Cursor
+scalar DateTime
